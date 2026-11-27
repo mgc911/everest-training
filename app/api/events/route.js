@@ -7,7 +7,7 @@ export async function GET() {
   try {
     return Response.json(await getEvents());
   } catch (e) {
-    return Response.json({ error: "No se pudieron cargar las quedadas" }, { status: 500 });
+    return Response.json({ error: "No se pudieron cargar los eventos" }, { status: 500 });
   }
 }
 

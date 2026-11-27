@@ -30,11 +30,11 @@ export default function Home() {
       if (!r.ok) throw new Error();
       setEvents((await r.json()).map((e) => ({ maybe: [], ...e })));
       setError("");
-    } catch { setError("No se pudieron cargar las quedadas."); }
+    } catch { setError("No se pudieron cargar los eventos."); }
   }, []);
   useEffect(() => { load(); const t = setInterval(load, 30000); return () => clearInterval(t); }, [load]);
 
-  // Confeti cuando una quedada llega a GROUP_SIZE personas
+  // Confeti cuando un evento llega a GROUP_SIZE personas
   useEffect(() => {
     if (!events) return;
     const counts = Object.fromEntries(events.map((e) => [e.id, e.going.length]));
@@ -142,7 +142,7 @@ export default function Home() {
       {error && <p className="err">{error}</p>}
 
       <Confetti burst={burst} />
-      {events === null && !error && <Loader text="Buscando quedadas…" />}
+      {events === null && !error && <Loader text="Buscando eventos…" />}
       <div className="days">
         {days.map((d, i) => {
           const list = (events || []).filter((e) => e.date === d.key);
@@ -161,7 +161,7 @@ export default function Home() {
                   <div key={ev.id} className="ev">
                     <RopeWall count={ev.going.length} />
                     <div className="t">{ev.time} · {ev.title}</div>
-                    <div className="meta">{ev.place ? `${ev.place} · ` : ""}propuesta por {ev.createdBy}</div>
+                    <div className="meta">{ev.place ? `${ev.place} · ` : ""}propuesto por {ev.createdBy}</div>
                     <div className="ppl">
                       <div className="y"><YesIcon />Van ({ev.going.length}): {ev.going.join(", ") || "nadie aún"}</div>
                       {ev.maybe.length > 0 && <div className="m"><MaybeIcon />Puede que sí ({ev.maybe.length}): {ev.maybe.join(", ")}</div>}
@@ -178,19 +178,19 @@ export default function Home() {
                   </div>
                 );
               })}
-              {name && <button className="btn small add" onClick={() => openForm(d.key)}>+ Proponer quedada</button>}
+              {name && <button className="btn small add" onClick={() => openForm(d.key)}>+ Proponer evento</button>}
             </section>
             </Fragment>
           );
         })}
         <div ref={sentinel}><Loader text="Cargando más días…" /></div>
       </div>
-      {!name && <p className="empty" style={{ marginTop: 16 }}>Escribe tu nombre arriba para proponer quedadas y responder.</p>}
+      {!name && <p className="empty" style={{ marginTop: 16 }}>Escribe tu nombre arriba para proponer eventos y responder.</p>}
 
       <dialog ref={dlg} onClose={() => setForm(null)}>
         {form && (
           <form onSubmit={submit}>
-            <strong>Nueva quedada</strong>
+            <strong>Nuevo evento</strong>
             <label>Título<input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></label>
             <div className="dt">
               <label>Día<input type="date" required value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value, confirmed: false, warn: "" })} /></label>
@@ -199,13 +199,13 @@ export default function Home() {
             <label>Notas:<input value={form.place} placeholder="Opcional" onChange={(e) => setForm({ ...form, place: e.target.value })} /></label>
             {form.warn && (
               <div className="warn">
-                ⚠️ Ya hay una quedada ese día a las {form.time}: {form.warn}. ¿Seguro que quieres añadir otra a la misma hora?
+                ⚠️ Ya hay un evento ese día a las {form.time}: {form.warn}. ¿Seguro que quieres añadir otro a la misma hora?
               </div>
             )}
             {form.err && <span className="err">{form.err}</span>}
             <div className="row" style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
               <button type="button" className="btn" onClick={() => dlg.current?.close()}>Cancelar</button>
-              <button className="btn primary">{form.warn ? "Sí, añadirla" : "Crear"}</button>
+              <button className="btn primary">{form.warn ? "Sí, añadirlo" : "Crear"}</button>
             </div>
           </form>
         )}
