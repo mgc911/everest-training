@@ -10,3 +10,5 @@ Cada persona entra con su nombre, propone un día y una hora, y el resto respond
 npm install
 npm run dev
 ```
+
+Proyecto de Vercel: `everest-training` (cada push a `main` se despliega a producción).
