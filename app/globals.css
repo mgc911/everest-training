@@ -1,13 +1,13 @@
 :root {
   --bg: #f6f4ef; --card: #ffffff; --ink: #1f2420; --muted: #6b716c;
   --line: #e3dfd6; --accent: #c2531f; --accent-ink: #fff;
-  --yes: #2f7d4a; --yes-bg: #e3f1e7; --no: #a33a2f; --no-bg: #f6e3e0; --today: #fff3e8;
+  --yes: #2f7d4a; --yes-bg: #e3f1e7; --no: #a33a2f; --no-bg: #f6e3e0; --maybe: #9a6b00; --maybe-bg: #fbf0d4; --today: #fff3e8;
 }
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #161917; --card: #202421; --ink: #ecebe6; --muted: #9aa09b;
     --line: #333833; --accent: #e0703a; --accent-ink: #160d08;
-    --yes: #7cc796; --yes-bg: #1f3326; --no: #ef8f84; --no-bg: #3a2320; --today: #2c241d;
+    --yes: #7cc796; --yes-bg: #1f3326; --no: #ef8f84; --no-bg: #3a2320; --maybe: #e6c065; --maybe-bg: #3a3020; --today: #2c241d;
   }
 }
 * { box-sizing: border-box; }
@@ -48,3 +48,5 @@ dialog form { display: flex; flex-direction: column; gap: 10px; }
 dialog label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--muted); }
 .err { color: var(--no); font-size: 13px; }
 .warn { background: var(--today); border: 1px solid var(--accent); border-radius: 8px; padding: 8px 10px; font-size: 13px; }
+.ppl .m { color: var(--maybe); }
+.btn.maybe.on { background: var(--maybe-bg); border-color: var(--maybe); color: var(--maybe); font-weight: 600; }

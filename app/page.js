@@ -24,7 +24,7 @@ export default function Home() {
     try {
       const r = await fetch("/api/events", { cache: "no-store" });
       if (!r.ok) throw new Error();
-      setEvents(await r.json());
+      setEvents((await r.json()).map((e) => ({ maybe: [], ...e })));
       setError("");
     } catch { setError("No se pudieron cargar las quedadas."); }
   }, []);
@@ -86,6 +86,7 @@ export default function Home() {
     setEvents((evs) => evs.map((ev) => ev.id !== id ? ev : {
       ...ev,
       going: status === "yes" ? [...new Set([...ev.going, name])] : ev.going.filter((n) => n !== name),
+      maybe: status === "maybe" ? [...new Set([...ev.maybe, name])] : ev.maybe.filter((n) => n !== name),
       notGoing: status === "no" ? [...new Set([...ev.notGoing, name])] : ev.notGoing.filter((n) => n !== name),
     }));
     await fetch(`/api/events/${id}/rsvp`, {
@@ -137,18 +138,20 @@ export default function Home() {
               <h2>{d.key === todayKey ? "Hoy · " : ""}{d.label} <small>{fmt(d.date)}</small></h2>
               {list.length === 0 && <span className="empty">Sin quedadas</span>}
               {list.map((ev) => {
-                const mine = ev.going.includes(name) ? "yes" : ev.notGoing.includes(name) ? "no" : null;
+                const mine = ev.going.includes(name) ? "yes" : ev.maybe.includes(name) ? "maybe" : ev.notGoing.includes(name) ? "no" : null;
                 return (
                   <div key={ev.id} className="ev">
                     <div className="t">{ev.time} · {ev.title}</div>
                     <div className="meta">{ev.place ? `${ev.place} · ` : ""}propuesta por {ev.createdBy}</div>
                     <div className="ppl">
                       <div className="y">✔ Van ({ev.going.length}): {ev.going.join(", ") || "nadie aún"}</div>
+                      {ev.maybe.length > 0 && <div className="m">? Puede que sí ({ev.maybe.length}): {ev.maybe.join(", ")}</div>}
                       {ev.notGoing.length > 0 && <div className="n">✘ No van ({ev.notGoing.length}): {ev.notGoing.join(", ")}</div>}
                     </div>
                     {name && (
                       <div className="row">
                         <button className={`btn small yes${mine === "yes" ? " on" : ""}`} onClick={() => rsvp(ev.id, "yes")}>Voy</button>
+                        <button className={`btn small maybe${mine === "maybe" ? " on" : ""}`} onClick={() => rsvp(ev.id, "maybe")}>Puede que sí</button>
                         <button className={`btn small no${mine === "no" ? " on" : ""}`} onClick={() => rsvp(ev.id, "no")}>No voy</button>
                         {ev.createdBy === name && <button className="btn small" onClick={() => remove(ev.id)}>Borrar</button>}
                       </div>
