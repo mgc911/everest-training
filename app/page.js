@@ -1,5 +1,6 @@
 "use client";
 import { Fragment, useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { YesIcon, MaybeIcon, XMark, ClimberLogo, RopeWall, Confetti, TodaySun, SleepyClimber, Ridge, Loader, GROUP_SIZE } from "./fun";
 
 const DAYS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
 const pad = (n) => String(n).padStart(2, "0");
@@ -11,7 +12,10 @@ export default function Home() {
   const [nameDraft, setNameDraft] = useState("");
   const [dayCount, setDayCount] = useState(28);
   const sentinel = useRef(null);
-  const [events, setEvents] = useState([]);
+  const [events, setEvents] = useState(null);
+  const [tap, setTap] = useState(null); // último botón pulsado, para animarlo
+  const [burst, setBurst] = useState(0);
+  const prevCounts = useRef(null);
   const [error, setError] = useState("");
   const [form, setForm] = useState(null);
   const dlg = useRef(null);
@@ -29,6 +33,17 @@ export default function Home() {
     } catch { setError("No se pudieron cargar las quedadas."); }
   }, []);
   useEffect(() => { load(); const t = setInterval(load, 30000); return () => clearInterval(t); }, [load]);
+
+  // Confeti cuando una quedada llega a GROUP_SIZE personas
+  useEffect(() => {
+    if (!events) return;
+    const counts = Object.fromEntries(events.map((e) => [e.id, e.going.length]));
+    const prev = prevCounts.current;
+    if (prev && events.some((e) => prev[e.id] !== undefined && prev[e.id] < GROUP_SIZE && e.going.length >= GROUP_SIZE)) {
+      setBurst(Date.now());
+    }
+    prevCounts.current = counts;
+  }, [events]);
 
   // La fecha de hoy se calcula en el navegador (no en el build) para que siempre sea la real
   const [now, setNow] = useState(null);
@@ -69,7 +84,7 @@ export default function Home() {
 
   async function submit(e) {
     e.preventDefault();
-    const clash = events.filter((ev) => ev.date === form.date && ev.time === form.time);
+    const clash = (events || []).filter((ev) => ev.date === form.date && ev.time === form.time);
     if (clash.length && !form.confirmed) {
       setForm({ ...form, confirmed: true, err: "", warn: clash.map((ev) => `"${ev.title}" de ${ev.createdBy}`).join(", ") });
       return;
@@ -83,6 +98,7 @@ export default function Home() {
   }
 
   async function rsvp(id, status) {
+    setTap({ id, status, n: Date.now() });
     setEvents((evs) => evs.map((ev) => ev.id !== id ? ev : {
       ...ev,
       going: status === "yes" ? [...new Set([...ev.going, name])] : ev.going.filter((n) => n !== name),
@@ -110,7 +126,7 @@ export default function Home() {
   return (
     <div className="wrap">
       <header>
-        <h1>🧗 Everest <span>Training</span></h1>
+        <h1><ClimberLogo /> Everest <span>Training</span></h1>
         {name ? (
           <div className="who">Hola, <strong style={{ color: "var(--ink)" }}>{name}</strong>
             <button className="btn small" onClick={() => { setNameDraft(name); setName(""); }}>Cambiar</button>
@@ -125,34 +141,37 @@ export default function Home() {
 
       {error && <p className="err">{error}</p>}
 
+      <Confetti burst={burst} />
+      {events === null && !error && <Loader text="Buscando quedadas…" />}
       <div className="days">
         {days.map((d, i) => {
-          const list = events.filter((e) => e.date === d.key);
+          const list = (events || []).filter((e) => e.date === d.key);
           const isMonday = d.date.getDay() === 1;
           return (
             <Fragment key={d.key}>
             {(i === 0 || isMonday) && (
-              <div className="sep">{i === 0 && !isMonday ? `Esta semana · hasta el ${fmt(new Date(d.date.getFullYear(), d.date.getMonth(), d.date.getDate() + ((7 - d.date.getDay()) % 7)))}` : weekLabel(d.date)}</div>
+              <div className="sep"><span>{i === 0 && !isMonday ? `Esta semana · hasta el ${fmt(new Date(d.date.getFullYear(), d.date.getMonth(), d.date.getDate() + ((7 - d.date.getDay()) % 7)))}` : weekLabel(d.date)}</span><Ridge /></div>
             )}
             <section className={`day${d.key === todayKey ? " today" : ""}`}>
-              <h2>{d.key === todayKey ? "Hoy · " : ""}{d.label} <small>{fmt(d.date)}</small></h2>
-              {list.length === 0 && <span className="empty">Sin quedadas</span>}
+              <h2><span className="dname">{d.key === todayKey && <><TodaySun />Hoy · </>}{d.label}</span> <small>{fmt(d.date)}</small></h2>
+              {list.length === 0 && events !== null && <SleepyClimber />}
               {list.map((ev) => {
                 const mine = ev.going.includes(name) ? "yes" : ev.maybe.includes(name) ? "maybe" : ev.notGoing.includes(name) ? "no" : null;
                 return (
                   <div key={ev.id} className="ev">
+                    <RopeWall count={ev.going.length} />
                     <div className="t">{ev.time} · {ev.title}</div>
                     <div className="meta">{ev.place ? `${ev.place} · ` : ""}propuesta por {ev.createdBy}</div>
                     <div className="ppl">
-                      <div className="y"><img className="ico" src="/icons/voy.svg" alt="" />Van ({ev.going.length}): {ev.going.join(", ") || "nadie aún"}</div>
-                      {ev.maybe.length > 0 && <div className="m"><img className="ico" src="/icons/puede.svg" alt="" />Puede que sí ({ev.maybe.length}): {ev.maybe.join(", ")}</div>}
-                      {ev.notGoing.length > 0 && <div className="n"><img className="ico" src="/icons/no.svg" alt="" />No van ({ev.notGoing.length}): {ev.notGoing.join(", ")}</div>}
+                      <div className="y"><YesIcon />Van ({ev.going.length}): {ev.going.join(", ") || "nadie aún"}</div>
+                      {ev.maybe.length > 0 && <div className="m"><MaybeIcon />Puede que sí ({ev.maybe.length}): {ev.maybe.join(", ")}</div>}
+                      {ev.notGoing.length > 0 && <div className="n"><XMark />No van ({ev.notGoing.length}): {ev.notGoing.join(", ")}</div>}
                     </div>
                     {name && (
                       <div className="row">
-                        <button className={`btn small yes${mine === "yes" ? " on" : ""}`} onClick={() => rsvp(ev.id, "yes")}><img className="ico" src="/icons/voy.svg" alt="" />Voy</button>
-                        <button className={`btn small maybe${mine === "maybe" ? " on" : ""}`} onClick={() => rsvp(ev.id, "maybe")}><img className="ico" src="/icons/puede.svg" alt="" />Puede que sí</button>
-                        <button className={`btn small no${mine === "no" ? " on" : ""}`} onClick={() => rsvp(ev.id, "no")}><img className="ico" src="/icons/no.svg" alt="" />No voy</button>
+                        <button className={`btn small yes${mine === "yes" ? " on" : ""}`} onClick={() => rsvp(ev.id, "yes")}>{(() => { const a = tap?.id === ev.id && tap.status === "yes"; return <YesIcon key={a ? tap.n : "s"} anim={a ? "snap" : null} />; })()}Voy</button>
+                        <button className={`btn small maybe${mine === "maybe" ? " on" : ""}`} onClick={() => rsvp(ev.id, "maybe")}>{(() => { const a = tap?.id === ev.id && tap.status === "maybe"; return <MaybeIcon key={a ? tap.n : "s"} anim={a ? "swing" : null} />; })()}Puede que sí</button>
+                        <button className={`btn small no${mine === "no" ? " on" : ""}`} onClick={() => rsvp(ev.id, "no")}>{(() => { const a = tap?.id === ev.id && tap.status === "no"; return <XMark key={a ? tap.n : "s"} anim={a} />; })()}No voy</button>
                         {ev.createdBy === name && <button className="btn small" onClick={() => remove(ev.id)}>Borrar</button>}
                       </div>
                     )}
@@ -164,7 +183,7 @@ export default function Home() {
             </Fragment>
           );
         })}
-        <div ref={sentinel} className="empty" style={{ textAlign: "center", padding: 16 }}>Cargando más días…</div>
+        <div ref={sentinel}><Loader text="Cargando más días…" /></div>
       </div>
       {!name && <p className="empty" style={{ marginTop: 16 }}>Escribe tu nombre arriba para proponer quedadas y responder.</p>}
 
