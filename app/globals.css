@@ -47,3 +47,4 @@ dialog { border: 1px solid var(--line); border-radius: 12px; background: var(--c
 dialog form { display: flex; flex-direction: column; gap: 10px; }
 dialog label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--muted); }
 .err { color: var(--no); font-size: 13px; }
+.warn { background: var(--today); border: 1px solid var(--accent); border-radius: 8px; padding: 8px 10px; font-size: 13px; }

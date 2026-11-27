@@ -69,6 +69,11 @@ export default function Home() {
 
   async function submit(e) {
     e.preventDefault();
+    const clash = events.filter((ev) => ev.date === form.date && ev.time === form.time);
+    if (clash.length && !form.confirmed) {
+      setForm({ ...form, confirmed: true, err: "", warn: clash.map((ev) => `"${ev.title}" de ${ev.createdBy}`).join(", ") });
+      return;
+    }
     const r = await fetch("/api/events", {
       method: "POST", headers: { "content-type": "application/json" },
       body: JSON.stringify({ ...form, name }),
@@ -165,13 +170,18 @@ export default function Home() {
           <form onSubmit={submit}>
             <strong>Nueva quedada</strong>
             <label>Título<input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></label>
-            <label>Día<input type="date" required value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} /></label>
-            <label>Hora<input type="time" required value={form.time} onChange={(e) => setForm({ ...form, time: e.target.value })} /></label>
+            <label>Día<input type="date" required value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value, confirmed: false, warn: "" })} /></label>
+            <label>Hora<input type="time" required value={form.time} onChange={(e) => setForm({ ...form, time: e.target.value, confirmed: false, warn: "" })} /></label>
             <label>Rocódromo (opcional)<input value={form.place} onChange={(e) => setForm({ ...form, place: e.target.value })} /></label>
+            {form.warn && (
+              <div className="warn">
+                ⚠️ Ya hay una quedada ese día a las {form.time}: {form.warn}. ¿Seguro que quieres añadir otra a la misma hora?
+              </div>
+            )}
             {form.err && <span className="err">{form.err}</span>}
             <div className="row" style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
               <button type="button" className="btn" onClick={() => dlg.current?.close()}>Cancelar</button>
-              <button className="btn primary">Crear</button>
+              <button className="btn primary">{form.warn ? "Sí, añadirla" : "Crear"}</button>
             </div>
           </form>
         )}
