@@ -1,20 +1,16 @@
 "use client";
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState, useCallback } from "react";
 
 const DAYS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
 const pad = (n) => String(n).padStart(2, "0");
 const iso = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-function mondayOf(d) {
-  const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  x.setDate(x.getDate() - ((x.getDay() + 6) % 7));
-  return x;
-}
 const fmt = (d) => d.toLocaleDateString("es-ES", { day: "numeric", month: "short" });
 
 export default function Home() {
   const [name, setName] = useState("");
   const [nameDraft, setNameDraft] = useState("");
-  const [weekStart, setWeekStart] = useState(() => mondayOf(new Date()));
+  const [dayCount, setDayCount] = useState(28);
+  const sentinel = useRef(null);
   const [events, setEvents] = useState([]);
   const [error, setError] = useState("");
   const [form, setForm] = useState(null);
@@ -34,11 +30,29 @@ export default function Home() {
   }, []);
   useEffect(() => { load(); const t = setInterval(load, 30000); return () => clearInterval(t); }, [load]);
 
-  const days = useMemo(() => DAYS.map((label, i) => {
-    const d = new Date(weekStart); d.setDate(d.getDate() + i); return { label, date: d, key: iso(d) };
-  }), [weekStart]);
-  const todayKey = iso(new Date());
-  const weekEnd = days[6].date;
+  // La fecha de hoy se calcula en el navegador (no en el build) para que siempre sea la real
+  const [now, setNow] = useState(null);
+  useEffect(() => { setNow(new Date()); }, []);
+  const todayKey = now ? iso(now) : "";
+  const days = useMemo(() => {
+    if (!now) return [];
+    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    return Array.from({ length: dayCount }, (_, i) => {
+      const d = new Date(start); d.setDate(d.getDate() + i);
+      return { label: DAYS[(d.getDay() + 6) % 7], date: d, key: iso(d) };
+    });
+  }, [dayCount, now]);
+
+  // Scroll infinito: carga 2 semanas más al llegar al final
+  useEffect(() => {
+    const el = sentinel.current;
+    if (!el) return;
+    const io = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) setDayCount((n) => n + 14);
+    }, { rootMargin: "400px" });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [now]);
 
   function saveName(e) {
     e.preventDefault();
@@ -82,7 +96,10 @@ export default function Home() {
     load();
   }
 
-  const shift = (n) => { const d = new Date(weekStart); d.setDate(d.getDate() + 7 * n); setWeekStart(d); };
+  function weekLabel(d) {
+    const end = new Date(d); end.setDate(end.getDate() + 6);
+    return `Semana del ${fmt(d)} al ${fmt(end)}`;
+  }
 
   return (
     <div className="wrap">
@@ -100,20 +117,19 @@ export default function Home() {
         )}
       </header>
 
-      <div className="nav">
-        <button className="btn" onClick={() => shift(-1)} aria-label="Semana anterior">←</button>
-        <strong>{fmt(weekStart)} – {fmt(weekEnd)}</strong>
-        <button className="btn" onClick={() => setWeekStart(mondayOf(new Date()))}>Hoy</button>
-        <button className="btn" onClick={() => shift(1)} aria-label="Semana siguiente">→</button>
-      </div>
       {error && <p className="err">{error}</p>}
 
-      <div className="week">
-        {days.map((d) => {
+      <div className="days">
+        {days.map((d, i) => {
           const list = events.filter((e) => e.date === d.key);
+          const isMonday = d.date.getDay() === 1;
           return (
-            <section key={d.key} className={`day${d.key === todayKey ? " today" : ""}`}>
-              <h2>{d.label} <small>{fmt(d.date)}</small></h2>
+            <Fragment key={d.key}>
+            {(i === 0 || isMonday) && (
+              <div className="sep">{i === 0 && !isMonday ? `Esta semana · hasta el ${fmt(new Date(d.date.getFullYear(), d.date.getMonth(), d.date.getDate() + ((7 - d.date.getDay()) % 7)))}` : weekLabel(d.date)}</div>
+            )}
+            <section className={`day${d.key === todayKey ? " today" : ""}`}>
+              <h2>{d.key === todayKey ? "Hoy · " : ""}{d.label} <small>{fmt(d.date)}</small></h2>
               {list.length === 0 && <span className="empty">Sin quedadas</span>}
               {list.map((ev) => {
                 const mine = ev.going.includes(name) ? "yes" : ev.notGoing.includes(name) ? "no" : null;
@@ -137,8 +153,10 @@ export default function Home() {
               })}
               {name && <button className="btn small add" onClick={() => openForm(d.key)}>+ Proponer quedada</button>}
             </section>
+            </Fragment>
           );
         })}
+        <div ref={sentinel} className="empty" style={{ textAlign: "center", padding: 16 }}>Cargando más días…</div>
       </div>
       {!name && <p className="empty" style={{ marginTop: 16 }}>Escribe tu nombre arriba para proponer quedadas y responder.</p>}
 
