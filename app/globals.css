@@ -50,3 +50,7 @@ dialog label { display: flex; flex-direction: column; gap: 4px; font-size: 13px;
 .warn { background: var(--today); border: 1px solid var(--accent); border-radius: 8px; padding: 8px 10px; font-size: 13px; }
 .ppl .m { color: var(--maybe); }
 .btn.maybe.on { background: var(--maybe-bg); border-color: var(--maybe); color: var(--maybe); font-weight: 600; }
+.ico { width: 18px; height: 18px; vertical-align: -4px; margin-right: 4px; }
+.btn .ico { width: 20px; height: 20px; vertical-align: -5px; }
+.ppl > div { display: flex; align-items: center; gap: 2px; }
+.ppl .ico { flex: none; }

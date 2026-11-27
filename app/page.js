@@ -144,15 +144,15 @@ export default function Home() {
                     <div className="t">{ev.time} · {ev.title}</div>
                     <div className="meta">{ev.place ? `${ev.place} · ` : ""}propuesta por {ev.createdBy}</div>
                     <div className="ppl">
-                      <div className="y">✔ Van ({ev.going.length}): {ev.going.join(", ") || "nadie aún"}</div>
-                      {ev.maybe.length > 0 && <div className="m">? Puede que sí ({ev.maybe.length}): {ev.maybe.join(", ")}</div>}
-                      {ev.notGoing.length > 0 && <div className="n">✘ No van ({ev.notGoing.length}): {ev.notGoing.join(", ")}</div>}
+                      <div className="y"><img className="ico" src="/icons/voy.svg" alt="" />Van ({ev.going.length}): {ev.going.join(", ") || "nadie aún"}</div>
+                      {ev.maybe.length > 0 && <div className="m"><img className="ico" src="/icons/puede.svg" alt="" />Puede que sí ({ev.maybe.length}): {ev.maybe.join(", ")}</div>}
+                      {ev.notGoing.length > 0 && <div className="n"><img className="ico" src="/icons/no.svg" alt="" />No van ({ev.notGoing.length}): {ev.notGoing.join(", ")}</div>}
                     </div>
                     {name && (
                       <div className="row">
-                        <button className={`btn small yes${mine === "yes" ? " on" : ""}`} onClick={() => rsvp(ev.id, "yes")}>Voy</button>
-                        <button className={`btn small maybe${mine === "maybe" ? " on" : ""}`} onClick={() => rsvp(ev.id, "maybe")}>Puede que sí</button>
-                        <button className={`btn small no${mine === "no" ? " on" : ""}`} onClick={() => rsvp(ev.id, "no")}>No voy</button>
+                        <button className={`btn small yes${mine === "yes" ? " on" : ""}`} onClick={() => rsvp(ev.id, "yes")}><img className="ico" src="/icons/voy.svg" alt="" />Voy</button>
+                        <button className={`btn small maybe${mine === "maybe" ? " on" : ""}`} onClick={() => rsvp(ev.id, "maybe")}><img className="ico" src="/icons/puede.svg" alt="" />Puede que sí</button>
+                        <button className={`btn small no${mine === "no" ? " on" : ""}`} onClick={() => rsvp(ev.id, "no")}><img className="ico" src="/icons/no.svg" alt="" />No voy</button>
                         {ev.createdBy === name && <button className="btn small" onClick={() => remove(ev.id)}>Borrar</button>}
                       </div>
                     )}
