@@ -14,7 +14,7 @@ export async function GET() {
 export async function POST(req) {
   const body = await req.json().catch(() => ({}));
   const title = clean(body.title) || "Rocódromo";
-  const place = clean(body.place);
+  const place = clean(body.place, 200);
   const createdBy = clean(body.name, 40);
   if (!createdBy || !isDate(body.date) || !isTime(body.time)) {
     return Response.json({ error: "Faltan nombre, día u hora" }, { status: 400 });

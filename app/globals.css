@@ -123,3 +123,6 @@ dialog label { display: flex; flex-direction: column; gap: 4px; font-size: 13px;
   .ridge path:first-child { stroke-dashoffset: 0; }
   .ridge .snow { opacity: 1; }
 }
+.dt { display: flex; gap: 10px; }
+.dt label { flex: 1; min-width: 0; }
+.dt input { width: 100%; }

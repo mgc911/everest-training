@@ -192,9 +192,11 @@ export default function Home() {
           <form onSubmit={submit}>
             <strong>Nueva quedada</strong>
             <label>Título<input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></label>
-            <label>Día<input type="date" required value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value, confirmed: false, warn: "" })} /></label>
-            <label>Hora<input type="time" required value={form.time} onChange={(e) => setForm({ ...form, time: e.target.value, confirmed: false, warn: "" })} /></label>
-            <label>Rocódromo (opcional)<input value={form.place} onChange={(e) => setForm({ ...form, place: e.target.value })} /></label>
+            <div className="dt">
+              <label>Día<input type="date" required value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value, confirmed: false, warn: "" })} /></label>
+              <label>Hora<input type="time" required value={form.time} onChange={(e) => setForm({ ...form, time: e.target.value, confirmed: false, warn: "" })} /></label>
+            </div>
+            <label>Notas:<input value={form.place} placeholder="Opcional" onChange={(e) => setForm({ ...form, place: e.target.value })} /></label>
             {form.warn && (
               <div className="warn">
                 ⚠️ Ya hay una quedada ese día a las {form.time}: {form.warn}. ¿Seguro que quieres añadir otra a la misma hora?
